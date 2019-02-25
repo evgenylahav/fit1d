@@ -4,6 +4,8 @@ from typing import Any, Dict
 
 
 class GenericModel(ABC):
+    max_iteration : int
+    
     @staticmethod
     @abstractmethod
     def fit(x: np.ndarray, y: np.ndarray, **kwargs) -> Dict[str, Any]:
