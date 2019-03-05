@@ -6,9 +6,9 @@ It is easy to add new fits and other functionalities
 
 from abc import ABC, abstractmethod
 import numpy as np
-from typing import List
-from fit1d.model import Model
-from fit1d.outlier import OutLier
+from typing import List,Tuple
+from fit1d.common.model import Model
+from fit1d.common.outlier import OutLier
 
 
 class FitResults:
@@ -47,17 +47,49 @@ class Fit1D(ABC):
     _model: Model
     _outlier: OutLier
     _use_remove_outliers: bool
+    _x: np.ndarray
+    _y: np.ndarray
+    _outlier_index: np.ndarray
+
+    def fit(self, x: np.ndarray, y: np.ndarray) -> FitResults:
+        if self._use_remove_outliers:
+            outliers = list()
+            self._model = self._fit_model(x, y)
+        else:
+            self._model, outliers = self._remove_outlier(x, y)
+
+        return self._calc_fit_results(x, y, outliers)
 
     @abstractmethod
-    def fit(self, x: np.ndarray, y: np.ndarray) -> FitResults:
+    def _fit_model(self, x: np.ndarray, y: np.ndarray) -> Model:
         pass
 
     @abstractmethod
     def eval(self, x: np.ndarray, model: Model = None) -> np.ndarray:
         pass
 
-    def _remove_outlier(self, x: np.ndarray, y: np.ndarray) -> List[int]:
-        return self._outlier.find_outliers(x, y, self._model)
+    def _calc_fit_results(self, x, y, outliers):
+        y_fit = self.eval(x)
+        errors = self.calc_error(y, y_fit)
+        rms = self.calc_rms(errors)
+        return FitResults(model=self._model,
+                          error_vector=errors,
+                          rms=rms,
+                          outlier=outliers)
+
+    def _remove_outlier(self, x: np.ndarray, y: np.ndarray) -> Tuple[Model, List[int]]:
+        outliers = list()
+
+        index = [1]
+        while len(index) > 1:
+            self._model = self._fit_model(x, y)
+            y_fit = self.eval(x)
+            error = self.calc_error(y, y_fit)
+            index = self._outlier.find_outliers(error)
+            outliers.append(index)
+            np.delete(x, index)
+            np.delete(y, index)
+        return self._model, outliers
 
     @staticmethod
     def calc_error(y: np.ndarray, y_fit: np.ndarray) -> np.ndarray:
@@ -70,9 +102,7 @@ class Fit1D(ABC):
     def get_model(self) -> Model:
         return self._model
 
-    def _set_outlier_handlers(self):
-        self._outlier._fit = self.fit
-        self._outlier._eval = self.eval
+
 
 
 class Fit1DMock(Fit1D):
@@ -81,16 +111,12 @@ class Fit1DMock(Fit1D):
         self._model = model
         self._outlier = outlier
         self._use_remove_outliers = remove_outliers
-        self._set_outlier_handlers()
 
-    def fit(self, x, y):
-        return FitResults(model=self._model,
-                          error_vector=np.array([1, 10, 100, 1000]),
-                          rms=5.4,
-                          outlier=self._outlier)
+    def _fit_model(self, x: np.ndarray, y: np.ndarray) -> Model:
+        return self._model
 
     def eval(self, x: np.ndarray, model: Model = None) -> np.ndarray:
         if model is None:
             model = self._model
 
-        return np.array([1, 2, 3, 4])
+        return np.array([11, 22, 33, 44])

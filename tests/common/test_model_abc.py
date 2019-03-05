@@ -1,5 +1,5 @@
 import unittest
-from fit1d.model import Model, ModelMock
+from fit1d.common.model import Model, ModelMock
 
 
 class TestModel(unittest.TestCase):

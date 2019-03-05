@@ -1,14 +1,14 @@
 import unittest
 import numpy as np
-from fit1d.model import ModelMock
-from fit1d.outlier import OutLierMock
-from fit1d.fit1d import Fit1DMock, FitResults
+from fit1d.common.model import ModelMock
+from fit1d.common.outlier import OutLierMock
+from fit1d.common.fit1d import Fit1DMock, FitResults
 
 
 class TestFit1D(unittest.TestCase):
     def setUp(self):
-        self.x = np.linspace(-15.0, 15.0, num=50)
-        self.y = self.x
+        self.x = np.array([1,2, 3, 4])
+        self.y = np.array([10,20, 30, 40])
         self.model = ModelMock({"param1": 5.5})
         self.outlier = OutLierMock({'param1': 10, 'param2': 5.4, 'param3': 'hello'})
         self.fit1d = Fit1DMock(model=self.model, outlier=self.outlier, remove_outliers=False)
@@ -45,12 +45,13 @@ class TestFit1D(unittest.TestCase):
 
         self.assertFalse(fit_res1 == fit_res2)
 
+
     def test_fit(self):
         fit = self.fit1d.fit(self.x, self.y)
         fit_ref = FitResults(model=self.model,
-                             error_vector=np.array([1, 10, 100, 1000]),
-                             rms=5.4,
-                             outlier=self.outlier)
+                             error_vector=np.array([-1, -2, -3, -4]),
+                             rms=self.fit1d.calc_rms(np.array([1, 2, 3, 4])),
+                             outlier=[])
         self.assertTrue(fit == fit_ref)
 
     def test_evaluate_with_model(self):

@@ -1,5 +1,5 @@
 """
-The model class is an abstract class used to define models for different types of fits.
+The model class is an common class used to define models for different types of fits.
 Each fit will need to implement its own model class
 """
 from abc import ABC, abstractmethod
