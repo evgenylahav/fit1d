@@ -41,12 +41,12 @@ class Fit1D(ABC):
     """
     This is the main class of the fit1d package. It is used to allow the user to execute
     fit and eval methods, in addition to calc_RMS and calc_error static services.
-    The properties of this class are the _model and _outlier objects and a _remove_outliers
+    The properties of this class are the _model and _outlier objects and a _use_remove_outliers
     boolean
     """
     _model: Model
     _outlier: OutLier
-    _remove_outliers: bool
+    _use_remove_outliers: bool
 
     @abstractmethod
     def fit(self, x: np.ndarray, y: np.ndarray) -> FitResults:
@@ -57,7 +57,7 @@ class Fit1D(ABC):
         pass
 
     def _remove_outlier(self, x: np.ndarray, y: np.ndarray) -> List[int]:
-        return self._outlier.remove_outliers(x, y, self._model)
+        return self._outlier.find_outliers(x, y, self._model)
 
     @staticmethod
     def calc_error(y: np.ndarray, y_fit: np.ndarray) -> np.ndarray:
@@ -70,13 +70,18 @@ class Fit1D(ABC):
     def get_model(self) -> Model:
         return self._model
 
+    def _set_outlier_handlers(self):
+        self._outlier._fit = self.fit
+        self._outlier._eval = self.eval
+
 
 class Fit1DMock(Fit1D):
     """ Mock class. Used only for tests """
     def __init__(self, model: Model, outlier: OutLier, remove_outliers: bool):
         self._model = model
         self._outlier = outlier
-        self._remove_outliers = remove_outliers
+        self._use_remove_outliers = remove_outliers
+        self._set_outlier_handlers()
 
     def fit(self, x, y):
         return FitResults(model=self._model,
