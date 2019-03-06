@@ -7,34 +7,9 @@ It is easy to add new fits and other functionalities
 from abc import ABC, abstractmethod
 import numpy as np
 from typing import List,Tuple
-from fit1d.common.model import Model
+from fit1d.common.model import Model, ModelMock
 from fit1d.common.outlier import OutLier
-
-
-class FitResults:
-    """
-    FitResults is a data storage class, that is used to get the output of the
-    fit method in the Fit1D class
-    """
-    _model: Model
-    _outlier: OutLier
-    _error_vector: np.ndarray
-    _rms: float
-
-    def __init__(self, model: Model, error_vector: np.ndarray, rms: float, outlier: OutLier):
-        """
-        The data class storage contains model object, error vector, rms and outlier object
-        """
-        self._model = model
-        self._error_vector = error_vector
-        self._rms = rms
-        self._outlier = outlier
-
-    def __eq__(self, other):
-        return self._model == other._model and\
-               np.array_equal(self._error_vector, other._error_vector) and\
-               self._rms == other._rms and \
-               self._outlier == other._outlier
+from fit1d.common.fit_data import FitData
 
 
 class Fit1D(ABC):
@@ -44,79 +19,100 @@ class Fit1D(ABC):
     The properties of this class are the _model and _outlier objects and a _use_remove_outliers
     boolean
     """
-    _model: Model
     _outlier: OutLier
     _use_remove_outliers: bool
-    _x: np.ndarray
-    _y: np.ndarray
-    _outlier_index: np.ndarray
+    _fit_data: FitData
 
-    def fit(self, x: np.ndarray, y: np.ndarray) -> FitResults:
+    # interface methods
+    def fit(self, x: np.ndarray, y: np.ndarray) -> FitData:
+        self._fit_data.x = x
+        self._fit_data.y = y
         if self._use_remove_outliers:
-            outliers = list()
-            self._model = self._fit_model(x, y)
+            self._remove_outlier()
         else:
-            self._model, outliers = self._remove_outlier(x, y)
+            self._calc_fit_and_update_fit_data()
 
-        return self._calc_fit_results(x, y, outliers)
+        return self._fit_data
 
+    def eval(self, x: np.ndarray = None, model: Model = None) -> np.ndarray:
+        if x is not None:
+            self._fit_data.x = x
+        if model is not None:
+            self._fit_data.model = model
+        return self._calc_eval()
+
+    def calc_error(self):
+        """
+        calc error vector , update _fit_data
+        :return:
+        """
+        if self._fit_data.y is not None and self._fit_data.y_fit is not None:
+            self._fit_data.error_vector = self._fit_data.y - self._fit_data.y_fit
+
+    def calc_rms(self):
+        if self._fit_data.error_vector is not None:
+            self._fit_data.rms = (sum(self._fit_data.error_vector ** 2) / len(self._fit_data.error_vector)) ** 0.5
+
+    def get_fit_data(self) -> FitData:
+        return self._fit_data
+
+    # abstract methods
     @abstractmethod
-    def _fit_model(self, x: np.ndarray, y: np.ndarray) -> Model:
+    def _calc_fit(self):
+        """
+        abstractmethod:
+        run fit calculation of the data update model in _fit_data.model
+        :return: Null
+        """
         pass
 
     @abstractmethod
-    def eval(self, x: np.ndarray, model: Model = None) -> np.ndarray:
+    def _calc_eval(self) -> np.ndarray:
+        """
+        abstractmethod:
+        subclass calculate model eval for inner x and model
+        update _fit_data.y_fit
+        :return: y_eval
+        """
         pass
 
-    def _calc_fit_results(self, x, y, outliers):
-        y_fit = self.eval(x)
-        errors = self.calc_error(y, y_fit)
-        rms = self.calc_rms(errors)
-        return FitResults(model=self._model,
-                          error_vector=errors,
-                          rms=rms,
-                          outlier=outliers)
+    # internal methods
+    def _update_fit_data(self):
+        self.eval()
+        self.calc_error()
+        self.calc_rms()
 
-    def _remove_outlier(self, x: np.ndarray, y: np.ndarray) -> Tuple[Model, List[int]]:
-        outliers = list()
+    def _remove_outlier(self):
+        while True:
+            self._calc_fit_and_update_fit_data()
+            indexes_to_remove = self._outlier.find_outliers(self._fit_data.error_vector)
+            if len(indexes_to_remove) == 0:
+                break
+            else:
+                self._remove_indexes(indexes_to_remove)
 
-        index = [1]
-        while len(index) > 1:
-            self._model = self._fit_model(x, y)
-            y_fit = self.eval(x)
-            error = self.calc_error(y, y_fit)
-            index = self._outlier.find_outliers(error)
-            outliers.append(index)
-            np.delete(x, index)
-            np.delete(y, index)
-        return self._model, outliers
+    def _remove_indexes(self, ind):
+        self._fit_data.x = np.delete(self._fit_data.x, ind)
+        self._fit_data.y = np.delete(self._fit_data.y, ind)
 
-    @staticmethod
-    def calc_error(y: np.ndarray, y_fit: np.ndarray) -> np.ndarray:
-        return y - y_fit
-
-    @staticmethod
-    def calc_rms(residual: np.ndarray) -> float:
-        return (sum(residual ** 2) / len(residual)) ** 0.5
-
-    def get_model(self) -> Model:
-        return self._model
-
-
+    def _calc_fit_and_update_fit_data(self):
+        self._calc_fit()
+        self._update_fit_data()
 
 
 class Fit1DMock(Fit1D):
     """ Mock class. Used only for tests """
-    def __init__(self, model: Model, outlier: OutLier, remove_outliers: bool):
-        self._model = model
+    def __init__(self, outlier: OutLier, remove_outliers: bool):
+        self._fit_data = FitData()
         self._outlier = outlier
         self._use_remove_outliers = remove_outliers
 
-    def _fit_model(self, x: np.ndarray, y: np.ndarray) -> Model:
-        return self._model
+    def _calc_fit(self):
+        self._fit_data.model = ModelMock({"param1": 5.5})
 
-    def eval(self, x: np.ndarray, model: Model = None) -> np.ndarray:
-        if model is None:
-            model = self._model
-
-        return np.array([11, 22, 33, 44])
+    def _calc_eval(self) -> np.ndarray:
+        if self._fit_data.y is None or len(self._fit_data.y) == 4:
+            self._fit_data.y_fit = np.array([11, 22, 33, 44])
+        else:
+            self._fit_data.y_fit = np.array([11, 33, 44])
+        return self._fit_data.y_fit

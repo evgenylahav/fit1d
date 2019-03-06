@@ -12,7 +12,16 @@ class TestOutliers(unittest.TestCase):
         self.model = ModelMock({"param1": 5.5})
 
     def test_outliers_mock(self):
-        d_ref = [1, 2, 3]
+        d_ref = [1]
         o = OutLierMock({'param1': 10, 'param2': 5.4, 'param3': 'hello'})
-        d_out = o.find_outliers([9, 0,3])
+        d_out = o.find_outliers(np.array([9, 0, 3]))
+        self.assertListEqual(d_ref, d_out)
+
+    def test_outliers_mock_run_twice(self):
+        d_ref = []
+        d_out = [6, 8]
+        o = OutLierMock({'param1': 10, 'param2': 5.4, 'param3': 'hello'})
+        for i in range(2):
+            d_out = o.find_outliers(np.array([9, 0, 3]))
+
         self.assertListEqual(d_ref, d_out)

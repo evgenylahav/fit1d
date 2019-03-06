@@ -15,7 +15,6 @@ class OutLier(ABC):
     """
     _outlier_parameters: Dict[str, Any] = dict()
 
-
     @abstractmethod
     def find_outliers(self, error: np.ndarray) -> List[int]:
         pass
@@ -31,6 +30,8 @@ class OutLierMock(OutLier):
 
     def find_outliers(self, error: np.ndarray) -> List[int]:
         if self.counter == 0:
+            self.counter += 1
             return [1]
         else:
             return []
+
