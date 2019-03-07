@@ -39,7 +39,8 @@ class Fit1D(ABC):
             self._fit_data.x = x
         if model is not None:
             self._fit_data.model = model
-        return self._calc_eval()
+        self._calc_eval()
+        return self._fit_data.y_fit
 
     def calc_error(self):
         """
@@ -67,18 +68,18 @@ class Fit1D(ABC):
         pass
 
     @abstractmethod
-    def _calc_eval(self) -> np.ndarray:
+    def _calc_eval(self):
         """
         abstractmethod:
         subclass calculate model eval for inner x and model
         update _fit_data.y_fit
-        :return: y_eval
+        :return: Void
         """
         pass
 
     # internal methods
     def _update_fit_data(self):
-        self.eval()
+        self._calc_eval()
         self.calc_error()
         self.calc_rms()
 
