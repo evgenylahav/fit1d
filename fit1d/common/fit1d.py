@@ -116,4 +116,4 @@ class Fit1DMock(Fit1D):
             self._fit_data.y_fit = np.array([11, 22, 33, 44])
         else:
             self._fit_data.y_fit = np.array([11, 33, 44])
-        return self._fit_data.y_fit
+
