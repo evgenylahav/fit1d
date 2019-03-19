@@ -2,7 +2,7 @@ from fit1d.common.model import Model
 from typing import List
 
 
-class SuperLorenzianModel(Model):
+class SuperLorentzianModel(Model):
 
     def __init__(self, model_list: List[float]):
         self.create_model_from_list(model_list)
