@@ -24,21 +24,21 @@ class TestModel(unittest.TestCase):
     def test_from_list(self):
         ref_list = [10, 50.2]
         new_m = ModelMock({"param1": 10, "param2": 50.2})
-        self.m.from_list(ref_list)
+        self.m.create_model_from_list(ref_list)
         self.assertTrue(new_m == self.m)
 
     def test_to_list(self):
         ref_list = [5.5, "hello"]
-        self.assertListEqual(ref_list, self.m.to_list())
+        self.assertListEqual(ref_list, self.m.dump_model_to_list())
 
     def test_from_dict(self):
         ref_dict = {"param1": "10", "param2": 50.2}
         new_m = ModelMock(ref_dict)
-        self.m.from_dict(ref_dict)
+        self.m.create_model_from_dict(ref_dict)
         self.assertTrue(new_m == self.m)
 
     def test_to_dict(self):
         new_m = ModelMock({"param1": "10", "param2": 50.2})
         ref_dict = {"param1": "10", "param2": 50.2}
-        self.assertDictEqual(ref_dict, new_m.to_dict())
+        self.assertDictEqual(ref_dict, new_m.dump_model_to_dict())
 
