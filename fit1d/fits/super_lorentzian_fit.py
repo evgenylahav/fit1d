@@ -4,12 +4,13 @@ import numpy as np
 from scipy.optimize import fmin
 from fit1d.common.fit1d import Fit1D, OutLier, FitData
 from fit1d.models.super_lorenzian_model import SuperLorentzianModel
+from typing import Type
 
 
 class SuperLorentzianFit(Fit1D):
     """Implement the Super Lorentzian Fit class"""
 
-    def __init__(self, outlier: OutLier, use_remove_outliers: bool = False):
+    def __init__(self, outlier: Type[OutLier], use_remove_outliers: bool = False):
         """ init the class"""
         self._use_remove_outliers = use_remove_outliers
         self._outlier = outlier
