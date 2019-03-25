@@ -1,10 +1,10 @@
 """Super Lorentzian Fit Module"""
 from typing import List
+from typing import Type
 import numpy as np
 from scipy.optimize import fmin
 from fit1d.common.fit1d import Fit1D, OutLier, FitData
 from fit1d.models.super_lorenzian_model import SuperLorentzianModel
-from typing import Type
 
 
 class SuperLorentzianFit(Fit1D):
