@@ -1,17 +1,17 @@
 import numpy as np
 from unittest import TestCase
 from fit1d.fits.super_lorentzian_fit import SuperLorentzianFit
-from fit1d.common.outlier import OutLierMock
+from fit1d.outliers.outlier_by_distance import RemoveOutlierByDistance
 
 
 class TestSuperLorentzian(TestCase):
     def setUp(self):
-        outlier = OutLierMock
+        outlier = RemoveOutlierByDistance
         self.x = np.linspace(-100, 100, 500)
         c = [30, 20, 10, 50]
         self.c = c
         self.y = c[1] + c[0]/(1 + ((self.x - c[2])/c[3])**40)
-        self.fitter = SuperLorentzianFit(outlier=OutLierMock)
+        self.fitter = SuperLorentzianFit(outlier=outlier)
         self.fitter.fit(self.x, self.y)
         self.fitter.eval(self.x)
 
