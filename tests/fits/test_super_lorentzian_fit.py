@@ -15,7 +15,6 @@ class TestSuperLorentzian(TestCase):
         self.fitter.fit(self.x, self.y)
         self.fitter.eval(self.x)
 
-
     def test_init(self):
         self.assertIsInstance(self.fitter, SuperLorentzianFit)
 
