@@ -1,0 +1,5 @@
+[
+  "test_gaussianModel.py::TestGaussianModel::test_default_constructor",
+  "test_gaussianModel.py::TestGaussianModel::test_inputs_constructor",
+  "test_gaussianModel.py::TestGaussianModel::test_to_from_list"
+]
