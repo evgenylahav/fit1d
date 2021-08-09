@@ -15,7 +15,7 @@ pycparser==2.18
 pyOpenSSL==18.0.0
 PySocks==1.6.8
 pytest==4.3.0
-pywin32==223
+pywin32==301
 requests==2.19.1
 ruamel-yaml==0.15.46
 scikit-learn==0.20.0
